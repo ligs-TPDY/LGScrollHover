@@ -7,8 +7,7 @@
 //
 
 //////////////////////////////////////---定义key---////////////////////////////////////////
-NSString * const INVESTINGPERSONALHOMEPAGE = @"InvestingPersonalHomepage";
-NSString * const INTELLIGENTDECISIONHOMEPAGE = @"IntelligentDecisionHomepage";
+NSString * const TEST = @"test";
 //////////////////////////////////////////////////////////////////////////////////////////
 
 #import "LGScrollHoverManager.h"
@@ -29,19 +28,19 @@ NSString * const INTELLIGENTDECISIONHOMEPAGE = @"IntelligentDecisionHomepage";
     });
     return sharedLGScrollHoverManager;
 }
-- (LGScrollHover *)getScrollHoverAboutKey:(NSString *)key
++ (LGScrollHover *)getScrollHoverAboutKey:(NSString *)key
 {
 //    NSLog(@"缓存复用池已经存在的key:%@,当新注册时谨防重复！！！",[_multiplexPool allKeys]);
     //1,查询是否存在该key标记的对象，如果存在，直接返回对象；如果不存在，创建新对象并返回对象
-    if ([[_multiplexPool allKeys] containsObject:key]) {
-        return _multiplexPool[key];
+    LGScrollHoverManager *manager = [LGScrollHoverManager sharedLGScrollHoverManager];
+    if ([[manager.multiplexPool allKeys] containsObject:key]) {
+        return manager.multiplexPool[key];
     }else{
         LGScrollHover *scrollHover = [[LGScrollHover alloc]init];
-        [_multiplexPool setObject:scrollHover forKey:key];
+        [manager.multiplexPool setObject:scrollHover forKey:key];
         return scrollHover;
     }
 }
-
 @end
 
 @interface LGScrollHover ()
@@ -64,17 +63,11 @@ NSString * const INTELLIGENTDECISIONHOMEPAGE = @"IntelligentDecisionHomepage";
     return sharedLGScrollHover;
 }
 
-- (void)addBottomLayerScrollView:(UIScrollView *)bottomLayerScrollView
+///1，底层滚动视图基本设置
+- (void)addBottomLayerScrollView:(UIScrollView *)bottomLayerScrollView bottomLayerScrollView_Y:(CGFloat)Y isShowLog:(BOOL)show;
 {
     bottomLayerScrollView.tag = 7800;
-}
-///悬停时底层滚动视图的位置
-- (void)setBottomLayerScrollView_Y:(CGFloat)Y
-{
     maxOffsetY = Y;
-}
-- (void)isShowLog:(BOOL)show
-{
     showLog = show;
 }
 ///恢复初始化设置
