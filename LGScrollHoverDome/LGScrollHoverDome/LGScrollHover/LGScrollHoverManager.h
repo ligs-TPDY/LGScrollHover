@@ -70,8 +70,10 @@ extern NSString * const TEST;
 
 ///4，恢复初始化设置
 - (void)lgDealloc;
-@end
 
-/**关于Y坐标的确定问题
- 
- */
+#pragma mark - --可定制功能开关--
+///底层视图是否支持下拉刷新，默认支持
+- (void)setBottomLayerSupportRefresh:(BOOL)supportRefresh;
+///上层视图是否支持下拉刷新，默认支持
+- (void)setUpperLayerSupportRefresh:(BOOL)supportRefresh;
+@end

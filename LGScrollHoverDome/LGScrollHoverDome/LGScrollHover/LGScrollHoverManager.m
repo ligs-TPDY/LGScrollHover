@@ -45,14 +45,31 @@ NSString * const TEST = @"test";
 
 @interface LGScrollHover ()
 {
-    BOOL bottomLayerCanMove;
-    BOOL upperLayerCanMove;
-    CGFloat maxOffsetY;
-    BOOL showLog;
+    BOOL _bottomLayerCanMove;
+    BOOL _upperLayerCanMove;
+    CGFloat _maxOffsetY;
+    BOOL _showLog;
+    
+    ///上层视图是否可以下拉刷新
+    BOOL _isUpperLayerCanRefresh;
+    ///底层ScrollView
+    UIScrollView *_bottomLayerScrollView;
+    
+    ///底层视图是否支持下拉刷新
+    BOOL _isBottomLayerSupportRefresh;
+    ///上层视图是否支持下拉刷新
+    BOOL _isUpperLayerSupportRefresh;
 }
 @end
 
 @implementation LGScrollHover
+
+- (void)setBottomLayerSupportRefresh:(BOOL)supportRefresh{
+    _isBottomLayerSupportRefresh = supportRefresh;
+}
+- (void)setUpperLayerSupportRefresh:(BOOL)supportRefresh{
+    _isUpperLayerSupportRefresh = supportRefresh;
+}
 
 + (LGScrollHover *)sharedLGScrollHover {
     static LGScrollHover *sharedLGScrollHover = nil;
@@ -67,55 +84,84 @@ NSString * const TEST = @"test";
 - (void)addBottomLayerScrollView:(UIScrollView *)bottomLayerScrollView bottomLayerScrollView_Y:(CGFloat)Y isShowLog:(BOOL)show;
 {
     bottomLayerScrollView.tag = 7800;
-    maxOffsetY = Y;
-    showLog = show;
+    _bottomLayerScrollView = bottomLayerScrollView;
+    _maxOffsetY = Y;
+    _showLog = show;
 }
 ///恢复初始化设置
 - (void)lgDealloc
 {
-    bottomLayerCanMove = YES;  // 最开始的时候是可以滑动的
-    upperLayerCanMove = NO;//最开始的时候是不能进行滑动的
+    _bottomLayerCanMove = YES;// 最开始的时候是可以滑动的
+    _upperLayerCanMove = YES;//最开始的时候是不能进行滑动的
+    _isUpperLayerCanRefresh = YES;//默认上层视图可以刷新
+    _bottomLayerScrollView = nil;
+    _isBottomLayerSupportRefresh = YES;
+    _isUpperLayerSupportRefresh = YES;
 }
 - (instancetype)init
 {
     self = [super init];
     if (self) {
-        bottomLayerCanMove = YES;  // 最开始的时候是可以滑动的
-        upperLayerCanMove = NO;//最开始的时候是不能进行滑动的
+        _bottomLayerCanMove = YES;// 最开始的时候是可以滑动的
+        _upperLayerCanMove = YES;//最开始的时候是不能进行滑动的
+        _isUpperLayerCanRefresh = YES;//默认上层视图可以刷新
+        _isBottomLayerSupportRefresh = YES;
+        _isUpperLayerSupportRefresh = YES;
     }
     return self;
 }
-
 - (void)lgBottomLayerScrollViewDidScroll:(UIScrollView *)scrollView{
     CGFloat contentOffsetY = scrollView.contentOffset.y;
-    if (showLog) {
+    if (_showLog) {
         NSLog(@"LGScrollViewController==>scrollView的偏移量：===%f", contentOffsetY);
     }
-    if (bottomLayerCanMove == NO) {
-        [scrollView setContentOffset:CGPointMake(0, maxOffsetY)];
+    if (_bottomLayerCanMove == NO && !_isUpperLayerCanRefresh) {///悬停状态
+        [scrollView setContentOffset:CGPointMake(0, _maxOffsetY)];
         return;
     }
-    if (contentOffsetY > maxOffsetY) {
-        if (showLog) {
-            NSLog(@"到达悬停位置，底部滚动停止！！！==>%f", maxOffsetY);
+    
+    if (contentOffsetY <= 0) {///底部视图滚到最上面，可以进行刷新操作，此时，上层视图可以滑动刷新
+        _upperLayerCanMove = _isUpperLayerSupportRefresh;
+        _bottomLayerCanMove = NO;
+        _isUpperLayerCanRefresh = YES;
+    }else if (0 < contentOffsetY && contentOffsetY < _maxOffsetY){///底部滑动，未到达悬停状态
+        _upperLayerCanMove = NO;
+        _bottomLayerCanMove = YES;
+        _isUpperLayerCanRefresh = NO;
+    }else if (contentOffsetY >= _maxOffsetY) {///底部滑动，到达悬停状态==>底部停止滑动，上部视图开始滑动
+        if (_showLog) {
+            NSLog(@"到达悬停位置，底部滚动停止！！！==>%f", _maxOffsetY);
         }
-        [scrollView setContentOffset:CGPointMake(0, maxOffsetY)]; //设置最大偏移
-        upperLayerCanMove = YES;
-        bottomLayerCanMove = NO;//自己不能滑动了
+        [scrollView setContentOffset:CGPointMake(0, _maxOffsetY)]; //设置最大偏移
+        _upperLayerCanMove = YES;
+        _bottomLayerCanMove = NO;
+        _isUpperLayerCanRefresh = NO;
     }
 }
-
 - (void)lgUpperLayerScrollViewDidScroll:(UIScrollView *)scrollView{
     CGFloat offsetY = scrollView.contentOffset.y;
-    if (showLog) {
+    if (_isBottomLayerSupportRefresh) {
+        if (offsetY >= 0) {//////当上层视图停止刷新数据时，底层视图可以下拉刷新
+            _bottomLayerScrollView.bounces = YES;
+        }else{
+            _bottomLayerScrollView.bounces = NO;///当上层视图尝试刷新数据时，底层视图禁止下拉刷新
+        }
+    }else{
+        _bottomLayerScrollView.bounces = _isBottomLayerSupportRefresh;
+    }
+    
+    if (_showLog) {
         NSLog(@"LGScrollView==>scrollView的偏移量：===%f", offsetY);
     }
-    if (upperLayerCanMove == NO) {
+    if (_upperLayerCanMove == NO) {
         [scrollView setContentOffset:CGPointMake(0, 0)];
     }
-    if (offsetY <= 0) {
-        bottomLayerCanMove = YES;
-        upperLayerCanMove = NO;//自己不能滑动了
+    
+    if (!_isUpperLayerCanRefresh) {///下拉上层视图两种情况，如果是悬停后，下拉，则是滑动底层视图。如果底层视图置顶时，下滑，为刷新操作。
+        if (offsetY <= 0) {
+            _bottomLayerCanMove = YES;
+            _upperLayerCanMove = YES;
+        }
     }
 }
 @end
