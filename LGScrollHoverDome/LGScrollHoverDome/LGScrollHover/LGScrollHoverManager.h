@@ -19,6 +19,13 @@ extern NSString * const TEST;
 
 #import <UIKit/UIKit.h>
 
+@protocol LGScrollHoverDelegate <NSObject>
+///获取当前滚动的情况，是底部在滚动还是上部视图在滚动。
+- (void)scrollHoverBottomLayerCanMove:(BOOL)bottomLayerCanMove upperLayerCanMove:(BOOL)upperLayerCanMove;
+
+@end
+
+
 @class LGScrollHover;
 
 @interface LGScrollHoverManager : NSObject
@@ -59,6 +66,8 @@ extern NSString * const TEST;
  */
 @interface LGScrollHover : NSObject
 
+@property (nonatomic,weak) id<LGScrollHoverDelegate>delegate;
+
 ///1，底层滚动视图基本设置
 - (void)addBottomLayerScrollView:(UIScrollView *)bottomLayerScrollView bottomLayerScrollView_Y:(CGFloat)Y isShowLog:(BOOL)show;
 
@@ -76,4 +85,5 @@ extern NSString * const TEST;
 - (void)setBottomLayerSupportRefresh:(BOOL)supportRefresh;
 ///上层视图是否支持下拉刷新，默认支持
 - (void)setUpperLayerSupportRefresh:(BOOL)supportRefresh;
+
 @end

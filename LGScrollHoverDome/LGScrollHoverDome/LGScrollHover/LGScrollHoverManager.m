@@ -136,6 +136,14 @@ NSString * const TEST = @"test";
         _upperLayerCanMove = YES;
         _bottomLayerCanMove = NO;
         _isUpperLayerCanRefresh = NO;
+        
+        
+    }
+    
+    if (contentOffsetY >= _maxOffsetY) {
+        [self.delegate scrollHoverBottomLayerCanMove:NO upperLayerCanMove:YES];
+    }else{
+        [self.delegate scrollHoverBottomLayerCanMove:YES upperLayerCanMove:NO];
     }
 }
 - (void)lgUpperLayerScrollViewDidScroll:(UIScrollView *)scrollView{
