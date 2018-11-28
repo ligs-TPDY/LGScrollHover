@@ -8,6 +8,7 @@
 
 ///////////////////////////////////---定义key---////////////////////////////
 extern NSString * const TEST;
+extern NSString * const TEST2;
 ///////////////////////////////////////////////////////////////////////////
 
 /*
@@ -22,7 +23,6 @@ extern NSString * const TEST;
 @protocol LGScrollHoverDelegate <NSObject>
 ///获取当前滚动的情况，是底部在滚动还是上部视图在滚动。
 - (void)scrollHoverBottomLayerCanMove:(BOOL)bottomLayerCanMove upperLayerCanMove:(BOOL)upperLayerCanMove;
-
 @end
 
 
@@ -74,10 +74,13 @@ extern NSString * const TEST;
 ///2，底层滚动视图调用
 - (void)lgBottomLayerScrollViewDidScroll:(UIScrollView *)scrollView;
 
-///3，上层滚动视图调用
+///3，中间左右滚动视图调用
+- (void)lgMiddleLayerScrollViewDidScroll:(UIScrollView *)scrollView;
+
+///4，上层滚动视图调用
 - (void)lgUpperLayerScrollViewDidScroll:(UIScrollView *)scrollView;
 
-///4，恢复初始化设置
+///5，恢复初始化设置
 - (void)lgDealloc;
 
 #pragma mark - --可定制功能开关--
