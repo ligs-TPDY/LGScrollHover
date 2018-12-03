@@ -100,7 +100,7 @@ NSString * const TEST2 = @"test2";
 {
     _bottomLayerCanMove = YES;// 最开始的时候是可以滑动的
     _upperLayerCanMove = YES;//最开始的时候是不能进行滑动的
-    _isUpperLayerCanRefresh = YES;//默认上层视图可以刷新
+    _isUpperLayerCanRefresh = NO;//默认上层视图可以刷新
     _bottomLayerScrollView = nil;
     _isBottomLayerSupportRefresh = YES;
     _isUpperLayerSupportRefresh = YES;
@@ -111,7 +111,7 @@ NSString * const TEST2 = @"test2";
     if (self) {
         _bottomLayerCanMove = YES;// 最开始的时候是可以滑动的
         _upperLayerCanMove = YES;//最开始的时候是能进行滑动的
-        _isUpperLayerCanRefresh = YES;//默认上层视图可以刷新
+        _isUpperLayerCanRefresh = NO;//默认上层视图可以刷新
         _isBottomLayerSupportRefresh = YES;
         _isUpperLayerSupportRefresh = YES;
     }
@@ -131,7 +131,9 @@ NSString * const TEST2 = @"test2";
         if ([offsetXX floatValue]==[offsetXX intValue]){
             _bottomLayerScrollViewContentOffsetY =  offsetY;
         }else{
-            [scrollView setContentOffset:CGPointMake(0, _bottomLayerScrollViewContentOffsetY)];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [scrollView setContentOffset:CGPointMake(0, _bottomLayerScrollViewContentOffsetY)];
+            });
         }
     }
     
@@ -141,7 +143,9 @@ NSString * const TEST2 = @"test2";
                         2，上层视图不可刷新:因为悬停后，不管上层视图是否支持下拉刷新，下拉上层视图，对应操作都是解除悬停状态
          */
         if (_bottomLayerCanMove == NO && !_isUpperLayerCanRefresh) {///悬停状态
-            [scrollView setContentOffset:CGPointMake(0, _maxOffsetY)];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [scrollView setContentOffset:CGPointMake(0, _maxOffsetY)];
+            });
             return;
         }
     }
@@ -186,18 +190,16 @@ NSString * const TEST2 = @"test2";
         NSLog(@"UpperLayerScrollView==>scrollView的偏移量X：===%f", offsetX);
     }
     
-    ///状态：_upperLayerCanMovewq为NO时，上层视图不可滚动
-    if (_upperLayerCanMove == NO) {
-        [scrollView setContentOffset:CGPointMake(0, 0)];
-        return;
-    }
-    
     {///上层视图与底部视图同时支持刷新时，上层视图刷新时，底部视图不可刷新；上层视图不刷新时，底部视图可刷新。
         if (_isBottomLayerSupportRefresh && _isUpperLayerSupportRefresh) {///底层支持刷新时
             if (offsetY >= 0) {//当上层视图停止刷新数据时，底层视图可以下拉刷新
-                _bottomLayerScrollView.bounces = YES;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    _bottomLayerScrollView.bounces = YES;
+                });
             }else{//当上层视图下拉刷新数据时，底层视图不可以下拉刷新
-                _bottomLayerScrollView.bounces = NO;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    _bottomLayerScrollView.bounces = NO;
+                });
             }
         }
     }
@@ -211,9 +213,17 @@ NSString * const TEST2 = @"test2";
         if (offsetY <= 0) {
             if (!_isUpperLayerCanRefresh) {///如果是分类悬停后，下拉，则是滑动底层视图。
                 _bottomLayerCanMove = YES;
-                _upperLayerCanMove = YES;
+                _upperLayerCanMove = NO;
             }
         }
+    }
+    
+    
+    ///状态：_upperLayerCanMovewq为NO时，上层视图不可滚动
+    if (_upperLayerCanMove == NO) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [scrollView setContentOffset:CGPointMake(0, 0)];
+        });
     }
 }
 ///3，中间左右滚动视图调用

@@ -63,6 +63,11 @@ extern NSString * const TEST2;
  - (void)scrollViewDidScroll:(UIScrollView *)scrollView{
     [[LGScrollHoverManager getScrollHoverAboutKey:TEST] lgUpperLayerScrollViewDidScroll:scrollView];
  }
+ 
+ 3,中间左右滚动视图调用
+ - (void)scrollViewDidScroll:(UIScrollView *)scrollView{
+    [[LGScrollHoverManager getScrollHoverAboutKey:TEST] lgMiddleLayerScrollViewDidScroll:scrollView];
+ }
  */
 @interface LGScrollHover : NSObject
 
